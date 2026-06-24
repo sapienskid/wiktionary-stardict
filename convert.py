@@ -262,11 +262,11 @@ def process_dump(
         else:
             open_file = open(dump_path, "rb")
 
-        context = ET.iterparse(open_file, events=("end",))
-        event, root = next(context)  # Get the root <mediawiki> element
+        context = ET.iterparse(open_file, events=("start", "end"))
+        _, root = next(context)  # First "start" event is <mediawiki>
 
         for event, elem in context:
-            if elem.tag == tag("page"):
+            if event == "end" and elem.tag == tag("page"):
                 page_count += 1
                 title_el = elem.find(tag("title"))
                 ns_el = elem.find(tag("ns"))
@@ -290,6 +290,7 @@ def process_dump(
                         f"  Processed {page_count:,} pages, "
                         f"{english_count:,} English entries found",
                         end="\r",
+                        flush=True,
                     )
 
                 if max_pages and page_count >= max_pages:
@@ -403,7 +404,7 @@ def download_dump(output_path: str):
                 downloaded += len(chunk)
                 if total:
                     pct = downloaded * 100 // total
-                    print(f"  Downloading: {pct}% ({downloaded/1024/1024:.0f}MB)", end="\r")
+                    print(f"  Downloading: {pct}% ({downloaded/1024/1024:.0f}MB)", end="\r", flush=True)
     print(f"\nDownloaded to {output_path}")
 
 
