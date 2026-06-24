@@ -1,0 +1,58 @@
+name: Build English Dictionary
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Convert Wiktionary to StarDict
+        run: |
+          python3 convert.py \
+            --download \
+            --output dict-en-en.zip \
+            --cleanup
+
+      - name: Get dump date
+        id: dump_date
+        run: echo "date=$(date -u +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dict-en-en
+          path: dict-en-en.zip
+          retention-days: 7
+
+      - name: Delete existing release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        run: |
+          gh release delete en-latest --yes --cleanup-tag 2>/dev/null || true
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create en-latest \
+            dict-en-en.zip \
+            --title "English Dictionary (${{ steps.dump_date.outputs.date }})" \
+            --notes "English StarDict dictionary generated from the latest enwiktionary dump.
+
+          - **Format:** StarDict 3.0 (dict-en-en.ifo, dict-en-en.idx, dict-en-en.dict.dz)
+          - **Source:** Wiktionary (CC BY-SA 3.0)
+          - **Dump date:** ${{ steps.dump_date.outputs.date }}
+          - **Size:** $(du -h dict-en-en.zip | cut -f1)
+
+          Compatible with Theorem and any StarDict-based reader." \
+            --latest

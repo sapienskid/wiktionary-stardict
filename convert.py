@@ -244,6 +244,7 @@ def process_dump(
     output_path: str,
     max_pages: int | None = None,
     progress_interval: int = 10000,
+    cleanup_dump: bool = False,
 ):
     """
     Process a Wiktionary XML dump and generate StarDict files.
@@ -313,6 +314,10 @@ def process_dump(
 
     ifo, idx, dict_dz = create_stardict(entries)
     create_zip(ifo, idx, dict_dz, output_path)
+
+    if cleanup_dump and os.path.exists(dump_path):
+        os.remove(dump_path)
+        print(f"Cleaned up dump: {dump_path}")
 
 
 def create_sample_dump(path: str):
@@ -409,12 +414,13 @@ def main():
     parser.add_argument("--download", action="store_true", help="Download the latest dump")
     parser.add_argument("--sample", action="store_true", help="Use a small sample for testing")
     parser.add_argument("--max-pages", type=int, help="Stop after N pages (for testing)")
+    parser.add_argument("--cleanup", action="store_true", help="Remove dump after conversion")
     args = parser.parse_args()
 
     if args.sample:
         sample_path = "/tmp/enwiktionary-sample.xml.bz2"
         create_sample_dump(sample_path)
-        process_dump(sample_path, args.output, progress_interval=1)
+        process_dump(sample_path, args.output, progress_interval=1, cleanup_dump=args.cleanup)
         return
 
     dump_path = args.dump
@@ -427,7 +433,7 @@ def main():
         print("ERROR: Provide --dump, --download, or --sample", file=sys.stderr)
         sys.exit(1)
 
-    process_dump(dump_path, args.output, max_pages=args.max_pages)
+    process_dump(dump_path, args.output, max_pages=args.max_pages, cleanup_dump=args.cleanup)
 
 
 if __name__ == "__main__":

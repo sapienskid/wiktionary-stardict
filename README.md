@@ -1,6 +1,18 @@
 # wiktionary-stardict
 
+[![Build English Dictionary](https://github.com/sapienskid/wiktionary-stardict/actions/workflows/build.yml/badge.svg)](https://github.com/sapienskid/wiktionary-stardict/actions/workflows/build.yml)
+
 Convert Wiktionary XML dumps to [StarDict](https://en.wikipedia.org/wiki/StarDict) dictionary format.
+
+## Pre-built dictionary
+
+The latest English dictionary is available as a [GitHub Release](https://github.com/sapienskid/wiktionary-stardict/releases/tag/en-latest):
+
+```
+https://github.com/sapienskid/wiktionary-stardict/releases/download/en-latest/dict-en-en.zip
+```
+
+Updated monthly via CI. Fast downloads through GitHub's CDN.
 
 ## Usage
 
@@ -8,7 +20,7 @@ Convert Wiktionary XML dumps to [StarDict](https://en.wikipedia.org/wiki/StarDic
 # Test with a small sample:
 python3 convert.py --sample --output dict-en-en.zip
 
-# Full English dictionary (requires the full enwiktionary dump, ~5GB compressed):
+# Full English dictionary (requires the full enwiktionary dump, ~1.5GB compressed):
 python3 convert.py --download --output dict-en-en.zip
 
 # Or use a local dump:
@@ -35,6 +47,11 @@ Creates a `.zip` file containing three StarDict files:
    - Cleans MediaWiki markup
 4. Groups definitions by word and generates StarDict binary format
 5. Outputs a standard StarDict `.zip` compatible with any StarDict-based reader
+
+## Automated builds
+
+The dictionary is rebuilt monthly via [GitHub Actions](.github/workflows/build.yml).
+The latest build is always available at the `en-latest` release tag.
 
 ## License
 
