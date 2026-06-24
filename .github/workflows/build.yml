@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -15,10 +16,21 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Convert Wiktionary to StarDict
+      - name: Download Wiktionary dump
+        run: |
+          DUMP_URL="https://dumps.wikimedia.org/enwiktionary/latest/enwiktionary-latest-pages-articles.xml.bz2"
+          wget \
+            --tries=3 \
+            --retry-connrefused \
+            --timeout=300 \
+            --progress=dot:giga \
+            -O /tmp/enwiktionary-pages-articles.xml.bz2 \
+            "$DUMP_URL"
+
+      - name: Convert to StarDict
         run: |
           python3 convert.py \
-            --download \
+            --dump /tmp/enwiktionary-pages-articles.xml.bz2 \
             --output dict-en-en.zip \
             --cleanup
 
@@ -49,10 +61,9 @@ jobs:
             --title "English Dictionary (${{ steps.dump_date.outputs.date }})" \
             --notes "English StarDict dictionary generated from the latest enwiktionary dump.
 
-          - **Format:** StarDict 3.0 (dict-en-en.ifo, dict-en-en.idx, dict-en-en.dict.dz)
+          - **Format:** StarDict 3.0 (.ifo, .idx, .dict.dz)
           - **Source:** Wiktionary (CC BY-SA 3.0)
           - **Dump date:** ${{ steps.dump_date.outputs.date }}
-          - **Size:** $(du -h dict-en-en.zip | cut -f1)
 
           Compatible with Theorem and any StarDict-based reader." \
             --latest
